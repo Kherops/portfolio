@@ -72,7 +72,7 @@ export default function Home() {
           <p className="text-lg md:text-2xl font-inter text-neonWhite mb-8 animate-fade-in max-w-2xl">
             Étudiant à Epitech (rentrée sept 2025), je recherche une alternance dès janvier 2026 pour 2 ans et demi (Mastère Cybersécurité Epitech).
           </p>
-          <a href="/cv.pdf" target="_blank" rel="noopener noreferrer" className="inline-block px-8 py-4 text-xl bg-neonViolet rounded-2xl text-white font-bold shadow-neonViolet hover:bg-neonPink transition animate-fade-in">Voir mon CV</a>
+          <a href="/portfolio/cv.pdf" target="_blank" rel="noopener noreferrer" className="inline-block px-8 py-4 text-xl bg-neonViolet rounded-2xl text-white font-bold shadow-neonViolet hover:bg-neonPink transition animate-fade-in">Voir mon CV</a>
         </div>
       </div>
     </section>
