@@ -1,0 +1,52 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: 'Inter', 'Poppins', 'Orbitron', sans-serif;
+}
+
+.font-orbitron {
+  font-family: 'Orbitron', sans-serif;
+}
+.font-poppins {
+  font-family: 'Poppins', sans-serif;
+}
+
+.text-neonCyan {
+  color: #00fff7;
+  text-shadow: 0 0 8px #00fff7, 0 0 16px #00fff7;
+}
+.text-neonPink {
+  color: #ff00c8;
+  text-shadow: 0 0 8px #ff00c8, 0 0 16px #ff00c8;
+}
+.text-neonViolet {
+  color: #8f00ff;
+  text-shadow: 0 0 8px #8f00ff, 0 0 16px #8f00ff;
+}
+.text-neonOrange {
+  color: #ff7a00;
+  text-shadow: 0 0 8px #ff7a00, 0 0 16px #ff7a00;
+}
+
+.shadow-neonCyan {
+  box-shadow: 0 0 16px #00fff7;
+}
+.shadow-neonPink {
+  box-shadow: 0 0 16px #ff00c8;
+}
+.shadow-neonViolet {
+  box-shadow: 0 0 16px #8f00ff;
+}
+.shadow-neonOrange {
+  box-shadow: 0 0 16px #ff7a00;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.8s cubic-bezier(.4,0,.2,1) both;
+}
+@keyframes fadeIn {
+  0% { opacity: 0; transform: translateY(24px); }
+  100% { opacity: 1; transform: none; }
+}
