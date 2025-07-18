@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
 import Home from './sections/Home';
 import About from './sections/About';
 import Projects from './sections/Projects';
@@ -8,13 +8,22 @@ import Snake from './sections/Snake';
 
 function Navigation() {
   const location = useLocation();
+  const navigate = useNavigate();
   const isSnakePage = location.pathname === '/snake';
+
+  const handleReturnToPortfolio = () => {
+    navigate('/');
+    // Scroll to top after navigation
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 100);
+  };
 
   if (isSnakePage) {
     return (
       <nav className="sticky top-0 z-50 bg-[#18122B]/90 backdrop-blur border-b border-neonCyan shadow-neonCyan animate-fade-in px-2 md:px-0 rounded-b-xl">
         <ul className="flex flex-wrap justify-center gap-3 md:gap-8 py-2 md:py-4 text-base md:text-lg font-inter text-neonCyan">
-          <li><Link to="/" className="hover:text-neonPink transition-all duration-200">← Retour au Portfolio</Link></li>
+          <li><button onClick={handleReturnToPortfolio} className="hover:text-neonPink transition-all duration-200 bg-transparent border-none cursor-pointer">← Retour au Portfolio</button></li>
         </ul>
       </nav>
     );
