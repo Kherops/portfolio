@@ -50,7 +50,7 @@ function MainPage() {
 
 export default function App() {
   return (
-    <Router>
+    <Router basename="/portfolio">
       <div className="bg-[#18122B] min-h-screen font-poppins">
         <Navigation />
         <Routes>
