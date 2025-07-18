@@ -60,7 +60,7 @@ export default function Home() {
       <div className="relative z-10 flex flex-col items-center justify-center w-full max-w-4xl px-4 py-16">
         {/* Avatar très grand, sans cercle */}
         <img
-          src="/bright-colorful-acrylic-watercolor-splash-600nw-2450236343-ezgif.com-webp-to-jpg-converter.png"
+          src="/portfolio/bright-colorful-acrylic-watercolor-splash-600nw-2450236343-ezgif.com-webp-to-jpg-converter.png"
           alt="Avatar Louis PROTON"
           className="w-60 h-60 md:w-[384px] md:h-[384px] object-cover rounded-full shadow-[0_0_16px_#3de2fc80] mb-4 md:mb-8 animate-float border-4 border-[#232946]"
           style={{ objectPosition: 'center' }}
