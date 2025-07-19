@@ -35,9 +35,34 @@ module.exports = {
           '0%': { opacity: 0, transform: 'translateY(24px)' },
           '100%': { opacity: 1, transform: 'none' },
         },
+        float: {
+          '0%, 100%': { transform: 'translateY(0px)' },
+          '50%': { transform: 'translateY(-10px)' },
+        },
+        menuFromRight: {
+          '0%': { opacity: 0, transform: 'translateX(100%) scale(0.8)' },
+          '100%': { opacity: 1, transform: 'translateX(0) scale(1)' },
+        },
+        menuFromLeft: {
+          '0%': { opacity: 0, transform: 'translateX(-100%) scale(0.8)' },
+          '100%': { opacity: 1, transform: 'translateX(0) scale(1)' },
+        },
+        menuFromTop: {
+          '0%': { opacity: 0, transform: 'translateY(-100%) scale(0.8)' },
+          '100%': { opacity: 1, transform: 'translateY(0) scale(1)' },
+        },
+        menuFromBottom: {
+          '0%': { opacity: 0, transform: 'translateY(100%) scale(0.8)' },
+          '100%': { opacity: 1, transform: 'translateY(0) scale(1)' },
+        },
       },
       animation: {
         'fade-in': 'fadeIn 0.8s cubic-bezier(.4,0,.2,1) both',
+        'float': 'float 3s ease-in-out infinite',
+        'menu-from-right': 'menuFromRight 0.7s cubic-bezier(0.16, 1, 0.3, 1) both',
+        'menu-from-left': 'menuFromLeft 0.7s cubic-bezier(0.16, 1, 0.3, 1) both',
+        'menu-from-top': 'menuFromTop 0.7s cubic-bezier(0.16, 1, 0.3, 1) both',
+        'menu-from-bottom': 'menuFromBottom 0.7s cubic-bezier(0.16, 1, 0.3, 1) both',
       },
     },
   },

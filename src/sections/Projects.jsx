@@ -5,31 +5,31 @@ const projects = [
   {
     title: 'Snake Cyberpunk 2077',
     description: 'Faites votre meilleur score et entrez dans le hall of fame.',
-    stack: ['React', 'Canvas', 'Confetti', 'LocalStorage'],
-    image: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80',
+    stack: ['React', 'Canvas', 'JavaScript'],
+    image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=800&q=80',
     link: '/snake',
     screenshots: [
-      'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=800&q=80',
     ],
   },
   {
     title: 'Shop-Seadoo.com',
     description: 'Site e-commerce de pièces détachées et accessoires pour motomarines.',
     stack: ['Next.js', 'Shopify', 'Custom API'],
-    image: 'https://images.unsplash.com/photo-1465101178521-c1a9136a3b99?auto=format&fit=crop&w=800&q=80',
+    image: '/portfolio/shopseadoo.png',
     link: 'https://shop-seadoo.com',
     screenshots: [
-      'https://images.unsplash.com/photo-1465101178521-c1a9136a3b99?auto=format&fit=crop&w=800&q=80',
+      '/portfolio/shopseadoo.png',
     ],
   },
   {
     title: 'Seadoo.fr',
     description: 'Site vitrine officiel de Seadoo France. Présentation de la marque et de la gamme motomarines.',
     stack: ['WordPress', 'Custom Design'],
-    image: 'https://images.unsplash.com/photo-1465101178521-c1a9136a3b99?auto=format&fit=crop&w=800&q=80',
+    image: '/portfolio/seadooproshop.png',
     link: 'https://seadoo.fr',
     screenshots: [
-      'https://images.unsplash.com/photo-1465101178521-c1a9136a3b99?auto=format&fit=crop&w=800&q=80',
+      '/portfolio/seadooproshop.png',
     ],
   },
   {
@@ -48,19 +48,29 @@ export default function Projects() {
   const [selected, setSelected] = useState(null);
 
   return (
-    <section id="projects" className="relative py-20 bg-gradient-to-br from-[#18122B] via-black to-[#232946] min-h-[80vh]">
+    <section id="projects" className="relative py-20 bg-gradient-to-br from-[#18122B] via-black to-[#232946]">
       <h2 className="text-3xl md:text-5xl font-orbitron font-bold text-neonPink mb-10 text-center">Projets</h2>
       <div className="flex flex-wrap justify-center gap-8">
         {projects.map((proj, idx) => (
           <div
             key={proj.title}
-            className="group bg-black/70 rounded-2xl shadow-lg shadow-neonPink/20 hover:scale-105 hover:shadow-neonCyan/40 transition-transform duration-300 w-80 cursor-pointer relative overflow-hidden"
+            className="group bg-black/70 rounded-2xl shadow-lg shadow-neonPink/20 hover:scale-105 hover:shadow-neonCyan/40 transition-transform duration-300 w-80 h-auto cursor-pointer relative overflow-hidden flex flex-col"
             onClick={() => setSelected(idx)}
           >
-            <img src={proj.image} alt={proj.title} className="w-full h-48 object-cover rounded-t-2xl group-hover:blur-[1px] transition-all duration-300" />
-            <div className="p-5 flex flex-col items-center text-center">
-              <h3 className="text-xl font-bold font-poppins text-neonViolet mb-2">{proj.title}</h3>
-              <p className="text-gray-200 mb-3 min-h-[48px]">{proj.description}</p>
+            <div className="w-full h-48 overflow-hidden rounded-t-2xl">
+              <img 
+                src={proj.image} 
+                alt={proj.title} 
+                className={`w-full h-full object-center group-hover:blur-[1px] transition-all duration-300 ${
+                  proj.image.includes('seadooproshop.png') 
+                    ? 'object-contain bg-white p-4' 
+                    : 'object-cover'
+                }`} 
+              />
+            </div>
+            <div className="p-5 flex flex-col items-center text-center flex-grow">
+              <h3 className="text-xl font-bold font-poppins text-neonViolet mb-2 text-center">{proj.title}</h3>
+              <p className="text-gray-200 mb-3 min-h-[48px] text-center leading-relaxed">{proj.description}</p>
               <div className="flex flex-wrap gap-2 justify-center">
                 {proj.stack.map((tech) => (
                   <span key={tech} className="bg-neonCyan/20 text-neonCyan px-2 py-1 rounded text-xs font-orbitron">

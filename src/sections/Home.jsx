@@ -70,7 +70,9 @@ export default function Home() {
         <div className="flex flex-col items-center justify-center text-center w-full">
           <p className="text-2xl md:text-3xl font-inter text-neonPink mb-4 animate-fade-in">Développeur Web Full Stack & Mastère Cybersécurité</p>
           <p className="text-lg md:text-2xl font-inter text-neonWhite mb-8 animate-fade-in max-w-2xl">
-            Étudiant à Epitech (rentrée sept 2025), je recherche une alternance dès janvier 2026 pour 2 ans et demi (Mastère Cybersécurité Epitech).
+            En recherche d'alternance
+            3ᵉ, 4ᵉ et 5ᵉ année Epitech 
+            <br /> Pré-MSc Pro Epitech - Rentrée Septembre 2025 – Nice
           </p>
           <a href="/portfolio/cv.pdf" target="_blank" rel="noopener noreferrer" className="inline-block px-8 py-4 text-xl bg-neonViolet rounded-2xl text-white font-bold shadow-neonViolet hover:bg-neonPink transition animate-fade-in">Voir mon CV</a>
         </div>
