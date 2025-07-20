@@ -1,4 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
+import { getScores, saveScore } from '../lib/supabase';
 
 const GRID_SIZE = 20;
 const SPEED = 100;
@@ -33,9 +34,31 @@ export default function Snake() {
   const [score, setScore] = useState(0);
   const [gameOver, setGameOver] = useState(false);
   const [pseudo, setPseudo] = useState('');
-  const [ranking, setRanking] = useState(() => JSON.parse(localStorage.getItem('snakeRanking') || '[]'));
+  const [ranking, setRanking] = useState([]);
+  const [isLoadingScores, setIsLoadingScores] = useState(true);
+  const [isSavingScore, setIsSavingScore] = useState(false);
   const [showRank, setShowRank] = useState(false);
   const [confetti, setConfetti] = useState([]);
+
+  // Charger les scores au démarrage
+  useEffect(() => {
+    const loadScores = async () => {
+      setIsLoadingScores(true);
+      try {
+        const scores = await getScores();
+        setRanking(scores);
+      } catch (error) {
+        console.error('Erreur lors du chargement des scores:', error);
+        // En cas d'erreur, utiliser le localStorage comme fallback
+        const localScores = JSON.parse(localStorage.getItem('snakeRanking') || '[]');
+        setRanking(localScores);
+      } finally {
+        setIsLoadingScores(false);
+      }
+    };
+    
+    loadScores();
+  }, []);
 
   useEffect(() => {
     if (gameOver) return;
@@ -54,20 +77,35 @@ export default function Snake() {
         }
         let newSnake = [newHead, ...prev];
         if (newHead.x === apple.x && newHead.y === apple.y) {
+          // Sauvegarder la position de la pomme avant de la remplacer
+          const applePosition = { x: apple.x, y: apple.y };
           setApple(getRandomApple(newSnake));
           setScore((s) => s + 1);
-          // Confetti
+          // Système de particules cyberpunk - explosion depuis la pomme
+          const cyberpunkColors = ['#00ffff', '#ff00ff', '#ffff00', '#00ff00', '#ff0000']; // Cyan, Magenta, Jaune, Vert, Rouge
           setConfetti((old) => [
             ...old,
-            ...Array.from({ length: 18 }, () => ({
-              x: (newHead.x + 0.5) * 20,
-              y: (newHead.y + 0.5) * 20,
-              dx: (Math.random() - 0.5) * 6,
-              dy: (Math.random() - 1.2) * 6,
-              alpha: 1,
-              color: '#00fff7',
-              size: 6 + Math.random() * 4,
-            })),
+            ...Array.from({ length: 12 }, () => {
+              // Angle aléatoire pour une dispersion uniforme dans toutes les directions
+              const angle = Math.random() * Math.PI * 2;
+              const speed = (0.8 + Math.random() * 1.2) * 1.3; // Vitesse augmentée de 30% : entre 1.04 et 2.6
+              const startX = (applePosition.x + 0.5) * 20;
+              const startY = (applePosition.y + 0.5) * 20;
+              return {
+                x: startX, // Partir exactement du centre de la pomme
+                y: startY,
+                originX: startX, // Position d'origine pour calculer la distance
+                originY: startY,
+                dx: Math.cos(angle) * speed, // Vitesse horizontale basée sur l'angle
+                dy: Math.sin(angle) * speed, // Vitesse verticale basée sur l'angle
+                alpha: 1,
+                color: cyberpunkColors[Math.floor(Math.random() * cyberpunkColors.length)],
+                size: 3 + Math.random() * 5, // Taille variable entre 3 et 8
+                birthTime: Date.now(), // Moment de création de la particule
+                lifespan: 1000, // Durée de vie en millisecondes (1 seconde)
+                maxDistance: 80 + Math.random() * 40, // Distance maximale avant disparition complète (80-120 pixels)
+              };
+            }),
           ]);
         } else {
           newSnake.pop();
@@ -78,13 +116,22 @@ export default function Snake() {
     return () => clearInterval(interval);
   }, [dir, apple, gameOver]);
 
+  // Gestion des contrôles clavier et tactiles
+  const handleDirectionChange = (newDir) => {
+    if (gameOver) return;
+    if (newDir.x === 0 && newDir.y === -1 && dir.y !== 1) setDir(newDir); // Haut
+    if (newDir.x === 0 && newDir.y === 1 && dir.y !== -1) setDir(newDir);  // Bas
+    if (newDir.x === -1 && newDir.y === 0 && dir.x !== 1) setDir(newDir);  // Gauche
+    if (newDir.x === 1 && newDir.y === 0 && dir.x !== -1) setDir(newDir);  // Droite
+  };
+
   useEffect(() => {
     const handleKey = (e) => {
       if (gameOver) return;
-      if (e.key === 'ArrowUp' && dir.y !== 1) setDir({ x: 0, y: -1 });
-      if (e.key === 'ArrowDown' && dir.y !== -1) setDir({ x: 0, y: 1 });
-      if (e.key === 'ArrowLeft' && dir.x !== 1) setDir({ x: -1, y: 0 });
-      if (e.key === 'ArrowRight' && dir.x !== -1) setDir({ x: 1, y: 0 });
+      if (e.key === 'ArrowUp') handleDirectionChange({ x: 0, y: -1 });
+      if (e.key === 'ArrowDown') handleDirectionChange({ x: 0, y: 1 });
+      if (e.key === 'ArrowLeft') handleDirectionChange({ x: -1, y: 0 });
+      if (e.key === 'ArrowRight') handleDirectionChange({ x: 1, y: 0 });
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
@@ -96,20 +143,69 @@ export default function Snake() {
     const ctx = canvasRef.current.getContext('2d');
     let running = true;
     function drawConfetti() {
-      setConfetti((old) =>
-        old
-          .map((c) => ({ ...c, x: c.x + c.dx, y: c.y + c.dy, dy: c.dy + 0.15, alpha: c.alpha - 0.02 }))
-          .filter((c) => c.alpha > 0)
-      );
+      setConfetti((old) => {
+        const currentTime = Date.now();
+        return old
+          .map((c) => {
+            const age = currentTime - c.birthTime; // Âge en millisecondes
+            const lifeRatio = Math.min(age / c.lifespan, 1); // Ratio entre 0 et 1
+            const deltaTime = 16.67; // Approximation pour 60fps (peut varier selon l'écran)
+            
+            // Nouvelles positions
+            const newX = c.x + (c.dx * deltaTime / 16.67);
+            const newY = c.y + (c.dy * deltaTime / 16.67);
+            
+            // Calculer la distance parcourue depuis l'origine
+            const distanceFromOrigin = Math.sqrt(
+              Math.pow(newX - c.originX, 2) + Math.pow(newY - c.originY, 2)
+            );
+            
+            // Easing pour un ralentissement plus rapide et plus contenu
+            const easingFactor = Math.pow(0.94, deltaTime / 16.67); // Ralentissement plus fort
+            
+            // Calcul d'alpha basé sur le temps ET la distance
+            const timeAlpha = 1 - Math.pow(lifeRatio, 3); // Disparition temporelle
+            const distanceRatio = Math.min(distanceFromOrigin / c.maxDistance, 1); // Ratio de distance
+            const distanceAlpha = 1 - Math.pow(distanceRatio, 2); // Disparition par distance (courbe quadratique)
+            
+            // Combiner les deux alphas (prendre le minimum pour une disparition plus rapide)
+            const combinedAlpha = Math.min(timeAlpha, distanceAlpha);
+            
+            return {
+              ...c,
+              x: newX,
+              y: newY,
+              dx: c.dx * easingFactor, // Ralentissement plus smooth avec easing
+              dy: c.dy * easingFactor, // Ralentissement vertical plus smooth
+              alpha: Math.max(0, combinedAlpha), // Disparition basée sur temps ET distance
+            };
+          })
+          .filter((c) => (currentTime - c.birthTime) < c.lifespan); // Filtrer par temps réel
+      });
       ctx.clearRect(0, 0, 400, 400);
-      // Draw confetti
+      // Draw cyberpunk particles avec effet smooth
       confetti.forEach((c) => {
         ctx.save();
         ctx.globalAlpha = c.alpha;
-        ctx.fillStyle = c.color;
+        
+        // Effet de glow plus doux avec plusieurs couches
+        const glowIntensity = c.alpha * 20;
         ctx.shadowColor = c.color;
-        ctx.shadowBlur = 12;
-        ctx.fillRect(c.x, c.y, c.size, c.size);
+        ctx.shadowBlur = glowIntensity;
+        
+        // Particule principale avec coins légèrement arrondis pour plus de douceur
+        ctx.fillStyle = c.color;
+        const x = c.x - c.size / 2; // Centrer la particule
+        const y = c.y - c.size / 2;
+        
+        // Dessiner un carré avec effet de glow progressif
+        ctx.fillRect(x, y, c.size, c.size);
+        
+        // Ajouter un effet de core plus brillant au centre
+        ctx.shadowBlur = glowIntensity / 2;
+        ctx.globalAlpha = c.alpha * 0.8;
+        ctx.fillRect(x + c.size * 0.25, y + c.size * 0.25, c.size * 0.5, c.size * 0.5);
+        
         ctx.restore();
       });
       // Draw game
@@ -149,14 +245,42 @@ export default function Snake() {
       running = false;
     };
     // eslint-disable-next-line
-  }, [apple, snake, confetti]);
+  }, [apple, snake]);
 
-  // Classement
-  function saveRank() {
+  // Classement avec Supabase
+  const saveRank = async () => {
     const name = pseudo.trim() || getDefaultPseudo();
-    const newRank = [...ranking, { name, score }].sort((a, b) => b.score - a.score).slice(0, 10);
-    setRanking(newRank);
-    localStorage.setItem('snakeRanking', JSON.stringify(newRank));
+    setIsSavingScore(true);
+    
+    try {
+      // Sauvegarder le score en ligne
+      await saveScore(name, score);
+      
+      // Recharger les scores pour avoir la liste à jour
+      const updatedScores = await getScores();
+      setRanking(updatedScores);
+      
+      // Aussi sauvegarder localement comme backup
+      localStorage.setItem('snakeRanking', JSON.stringify(updatedScores));
+      
+      setShowRank(false);
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde:', error);
+      
+      // En cas d'erreur, utiliser le localStorage comme fallback
+      const newRank = [...ranking, { player_name: name, score }].sort((a, b) => b.score - a.score).slice(0, 10);
+      setRanking(newRank);
+      localStorage.setItem('snakeRanking', JSON.stringify(newRank));
+      setShowRank(false);
+      
+      // Optionnel: afficher une notification d'erreur à l'utilisateur
+      alert('Erreur lors de la sauvegarde en ligne. Score sauvegardé localement.');
+    } finally {
+      setIsSavingScore(false);
+    }
+  };
+  
+  function closeRankModal() {
     setShowRank(false);
   }
   function resetGame() {
@@ -170,36 +294,120 @@ export default function Snake() {
   }
 
   return (
-    <section className="flex flex-col items-center py-16 min-h-[80vh] bg-gradient-to-br from-[#18122B] via-black to-[#232946]">
-      <h2 className="text-3xl md:text-5xl font-orbitron font-bold text-neonPink mb-6">Snake Cyberpunk 2077</h2>
-      <canvas
-        ref={canvasRef}
-        width={400}
-        height={400}
-        className="rounded-2xl shadow-neonCyan border-4 border-neonCyan bg-black mb-6"
-        style={{ maxWidth: 360, width: '100%', height: 'auto', aspectRatio: '1/1' }}
-      />
-      <div className="flex flex-col md:flex-row gap-8 w-full max-w-2xl justify-center items-start">
-        <div className="flex-1 text-center">
-          <div className="text-neonCyan font-orbitron text-xl mb-2">Score : {score}</div>
-          <button onClick={resetGame} className="mt-2 px-5 py-2 bg-neonPink rounded-xl text-white font-bold shadow-neonPink hover:bg-neonCyan transition">Restart</button>
+    <section className="flex flex-col py-4 md:py-8 pb-24 bg-gradient-to-br from-[#18122B] via-black to-[#232946] min-h-screen">
+      {/* Titre en haut */}
+      <h2 className="text-3xl md:text-5xl font-orbitron font-bold text-neonPink mb-6 text-center px-4">Snake 2077</h2>
+      
+      {/* Zone de jeu - Layout mobile */}
+      <div className="flex flex-col items-center justify-center gap-4 px-4 mb-6">
+        {/* Canvas du jeu */}
+        <div className="flex-shrink-0">
+          <canvas
+            ref={canvasRef}
+            width={400}
+            height={400}
+            className="rounded-2xl shadow-neonCyan border-4 border-neonCyan bg-black"
+            style={{ 
+              maxWidth: '280px', 
+              width: '100%', 
+              height: 'auto', 
+              aspectRatio: '1/1'
+            }}
+          />
         </div>
-        <div className="flex-1">
-          <h3 className="text-neonViolet font-bold text-lg mb-2 text-center">Hall of Fame</h3>
-          <ul className="space-y-1 text-center">
-            {ranking.map((r, i) => (
-              <li key={i} className="font-orbitron text-neonCyan">
-                {i + 1}. {r.name} <span className="text-neonPink">{r.score}</span>
-              </li>
-            ))}
-            {ranking.length === 0 && <li className="text-gray-400">Aucun score enregistré</li>}
-          </ul>
+        
+        {/* Score et Restart - Juste sous le snake */}
+        <div className="flex flex-row items-center justify-between gap-4 w-full max-w-xs">
+          <button
+            onClick={resetGame}
+            className="px-4 py-2 bg-neonPink rounded-xl text-white font-bold shadow-neonPink hover:bg-neonCyan transition text-sm"
+          >
+            Restart
+          </button>
+          <div className="text-neonCyan font-orbitron text-lg">Score : {score}</div>
+        </div>
+        
+        {/* Contrôles tactiles - Visible uniquement sur mobile */}
+        <div className="flex md:hidden flex-col items-center justify-center mt-2 mb-4">
+          <div className="grid grid-cols-3 gap-2 w-48 h-48">
+            {/* Ligne du haut */}
+            <div></div>
+            <button
+              onTouchStart={() => handleDirectionChange({ x: 0, y: -1 })}
+              onClick={() => handleDirectionChange({ x: 0, y: -1 })}
+              className="bg-neonCyan/20 border-2 border-neonCyan rounded-xl flex items-center justify-center text-neonCyan text-2xl font-bold hover:bg-neonCyan/40 active:bg-neonCyan/60 transition-all duration-150 h-14 w-14"
+              disabled={gameOver}
+            >
+              ↑
+            </button>
+            <div></div>
+            
+            {/* Ligne du milieu */}
+            <button
+              onTouchStart={() => handleDirectionChange({ x: -1, y: 0 })}
+              onClick={() => handleDirectionChange({ x: -1, y: 0 })}
+              className="bg-neonCyan/20 border-2 border-neonCyan rounded-xl flex items-center justify-center text-neonCyan text-2xl font-bold hover:bg-neonCyan/40 active:bg-neonCyan/60 transition-all duration-150 h-14 w-14"
+              disabled={gameOver}
+            >
+              ←
+            </button>
+            <div></div>
+            <button
+              onTouchStart={() => handleDirectionChange({ x: 1, y: 0 })}
+              onClick={() => handleDirectionChange({ x: 1, y: 0 })}
+              className="bg-neonCyan/20 border-2 border-neonCyan rounded-xl flex items-center justify-center text-neonCyan text-2xl font-bold hover:bg-neonCyan/40 active:bg-neonCyan/60 transition-all duration-150 h-14 w-14"
+              disabled={gameOver}
+            >
+              →
+            </button>
+            
+            {/* Ligne du bas */}
+            <div></div>
+            <button
+              onTouchStart={() => handleDirectionChange({ x: 0, y: 1 })}
+              onClick={() => handleDirectionChange({ x: 0, y: 1 })}
+              className="bg-neonCyan/20 border-2 border-neonCyan rounded-xl flex items-center justify-center text-neonCyan text-2xl font-bold hover:bg-neonCyan/40 active:bg-neonCyan/60 transition-all duration-150 h-14 w-14"
+              disabled={gameOver}
+            >
+              ↓
+            </button>
+            <div></div>
+          </div>
         </div>
       </div>
+      
+      {/* Hall of Fame - En bas, scrollable sur mobile */}
+      <div className="flex-1 px-4 pb-8">
+        <h3 className="text-neonViolet font-bold text-xl mb-4 text-center">Hall of Fame</h3>
+        <div className="max-w-md mx-auto">
+          {isLoadingScores ? (
+            <div className="text-center text-gray-400 text-lg">Chargement des scores...</div>
+          ) : (
+            <ul className="space-y-2 text-center">
+              {ranking.map((rank, index) => (
+                <li key={rank.id || index} className="font-orbitron text-neonCyan text-lg">
+                  {index + 1}. {rank.player_name || rank.name} <span className="text-neonPink font-bold">{rank.score}</span>
+                </li>
+              ))}
+              {ranking.length === 0 && (
+                <li className="text-gray-400 text-lg">Aucun score enregistré</li>
+              )}
+            </ul>
+          )}
+        </div>
+      </div>
+      
       {/* Modal classement */}
       {showRank && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
-          <div className="bg-[#18122B] rounded-2xl shadow-2xl p-8 max-w-sm w-full relative animate-fade-in">
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50" onClick={closeRankModal}>
+          <div className="bg-[#18122B] rounded-2xl shadow-2xl p-8 max-w-sm w-full relative animate-fade-in" onClick={(e) => e.stopPropagation()}>
+            {/* Croix de fermeture */}
+            <button 
+              onClick={closeRankModal}
+              className="absolute top-3 right-3 text-gray-400 hover:text-neonPink transition-colors duration-200 text-2xl font-bold w-8 h-8 flex items-center justify-center rounded-full hover:bg-black/30"
+            >
+              ×
+            </button>
             <h3 className="text-2xl font-orbitron font-bold text-neonCyan mb-2">Bravo&nbsp;!</h3>
             <p className="text-gray-100 mb-4 text-center">Votre score&nbsp;: <span className="text-neonPink font-bold">{score}</span></p>
             <input
@@ -209,7 +417,17 @@ export default function Snake() {
               onChange={e => setPseudo(e.target.value)}
               className="w-full mb-4 px-3 py-2 rounded bg-black/60 border border-neonCyan text-white font-poppins focus:outline-none focus:ring-2 focus:ring-neonCyan"
             />
-            <button onClick={saveRank} className="px-6 py-2 bg-neonViolet rounded-xl text-white font-bold shadow-neonViolet hover:bg-neonPink transition w-full">Enregistrer mon score</button>
+            <button 
+              onClick={saveRank} 
+              disabled={isSavingScore}
+              className={`px-6 py-2 rounded-xl text-white font-bold transition w-full ${
+                isSavingScore 
+                  ? 'bg-gray-600 cursor-not-allowed' 
+                  : 'bg-neonViolet shadow-neonViolet hover:bg-neonPink'
+              }`}
+            >
+              {isSavingScore ? 'Sauvegarde en cours...' : 'Enregistrer mon score'}
+            </button>
           </div>
         </div>
       )}

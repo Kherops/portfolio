@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 
 const projects = [
   {
-    title: 'Snake Cyberpunk 2077',
+    title: 'Snake 2077',
     description: 'Faites votre meilleur score et entrez dans le hall of fame.',
     stack: ['React', 'Canvas', 'JavaScript'],
     image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=800&q=80',
