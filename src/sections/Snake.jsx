@@ -1,6 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { getScores, saveScore } from '../lib/supabase';
-import { diagnosticSupabase } from '../lib/supabase-diagnostic';
 
 const GRID_SIZE = 20;
 const SPEED = 100;
@@ -40,8 +39,6 @@ export default function Snake() {
   const [isSavingScore, setIsSavingScore] = useState(false);
   const [showRank, setShowRank] = useState(false);
   const [confetti, setConfetti] = useState([]);
-  const [errorMessage, setErrorMessage] = useState('');
-  const [showDiagnostic, setShowDiagnostic] = useState(false);
 
   // Charger les scores au démarrage
   useEffect(() => {
@@ -284,26 +281,10 @@ export default function Snake() {
     // eslint-disable-next-line
   }, [apple, snake]);
 
-  // Diagnostic Supabase
-  const runDiagnostic = async () => {
-    setShowDiagnostic(true);
-    const result = await diagnosticSupabase();
-    if (result.success) {
-      setErrorMessage('✅ ' + result.message);
-    } else {
-      setErrorMessage('❌ ' + result.error);
-    }
-    setTimeout(() => {
-      setShowDiagnostic(false);
-      setErrorMessage('');
-    }, 5000);
-  };
-
   // Classement avec Supabase
   const saveRank = async () => {
     const name = pseudo.trim() || getDefaultPseudo();
     setIsSavingScore(true);
-    setErrorMessage('');
     
     try {
       // Sauvegarder le score en ligne
@@ -316,37 +297,18 @@ export default function Snake() {
       // Aussi sauvegarder localement comme backup
       localStorage.setItem('snakeRanking', JSON.stringify(updatedScores));
       
-      setErrorMessage('✅ Score sauvegardé avec succès !');
-      setTimeout(() => {
-        setShowRank(false);
-        setErrorMessage('');
-      }, 2000);
-      
+      setShowRank(false);
     } catch (error) {
       console.error('Erreur lors de la sauvegarde:', error);
-      
-      // Messages d'erreur plus détaillés
-      let errorMsg = 'Erreur de sauvegarde en ligne';
-      if (error.message?.includes('JWT')) {
-        errorMsg = 'Erreur d\'authentification Supabase - Vérifiez votre configuration';
-      } else if (error.message?.includes('relation') || error.message?.includes('table')) {
-        errorMsg = 'Table snake_scores introuvable - Vérifiez votre base de données';
-      } else if (error.message?.includes('policy')) {
-        errorMsg = 'Permissions insuffisantes - Vérifiez les politiques RLS';
-      }
-      
-      setErrorMessage('❌ ' + errorMsg);
       
       // En cas d'erreur, utiliser le localStorage comme fallback
       const newRank = [...ranking, { player_name: name, score }].sort((a, b) => b.score - a.score).slice(0, 10);
       setRanking(newRank);
       localStorage.setItem('snakeRanking', JSON.stringify(newRank));
+      setShowRank(false);
       
-      // Ne pas fermer immédiatement pour laisser voir l'erreur
-      setTimeout(() => {
-        setShowRank(false);
-        setErrorMessage('');
-      }, 5000);
+      // Optionnel: afficher une notification d'erreur à l'utilisateur
+      alert('Erreur lors de la sauvegarde en ligne. Score sauvegardé localement.');
     } finally {
       setIsSavingScore(false);
     }
@@ -486,18 +448,6 @@ export default function Snake() {
             </button>
             <h3 className="text-2xl font-orbitron font-bold text-neonCyan mb-2">Bravo&nbsp;!</h3>
             <p className="text-gray-100 mb-4 text-center">Votre score&nbsp;: <span className="text-neonPink font-bold">{score}</span></p>
-            
-            {/* Message d'erreur/succès */}
-            {errorMessage && (
-              <div className={`mb-4 p-3 rounded-lg text-center font-medium ${
-                errorMessage.includes('✅') 
-                  ? 'bg-green-900/50 border border-green-500 text-green-300'
-                  : 'bg-red-900/50 border border-red-500 text-red-300'
-              }`}>
-                {errorMessage}
-              </div>
-            )}
-            
             <input
               type="text"
               placeholder="Votre pseudo (facultatif)"
@@ -505,32 +455,17 @@ export default function Snake() {
               onChange={e => setPseudo(e.target.value)}
               className="w-full mb-4 px-3 py-2 rounded bg-black/60 border border-neonCyan text-white font-poppins focus:outline-none focus:ring-2 focus:ring-neonCyan"
             />
-            <div className="space-y-3">
-              <button 
-                onClick={saveRank} 
-                disabled={isSavingScore || showDiagnostic}
-                className={`px-6 py-2 rounded-xl text-white font-bold transition w-full ${
-                  isSavingScore || showDiagnostic
-                    ? 'bg-gray-600 cursor-not-allowed' 
-                    : 'bg-neonViolet shadow-neonViolet hover:bg-neonPink'
-                }`}
-              >
-                {isSavingScore ? 'Sauvegarde en cours...' : 'Enregistrer mon score'}
-              </button>
-              
-              {/* Bouton de diagnostic */}
-              <button 
-                onClick={runDiagnostic} 
-                disabled={isSavingScore || showDiagnostic}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition w-full ${
-                  showDiagnostic
-                    ? 'bg-gray-600 cursor-not-allowed text-gray-400' 
-                    : 'bg-gray-700 hover:bg-gray-600 text-gray-300 border border-gray-500'
-                }`}
-              >
-                {showDiagnostic ? '🔍 Diagnostic en cours...' : '🔧 Tester la connexion'}
-              </button>
-            </div>
+            <button 
+              onClick={saveRank} 
+              disabled={isSavingScore}
+              className={`px-6 py-2 rounded-xl text-white font-bold transition w-full ${
+                isSavingScore 
+                  ? 'bg-gray-600 cursor-not-allowed' 
+                  : 'bg-neonViolet shadow-neonViolet hover:bg-neonPink'
+              }`}
+            >
+              {isSavingScore ? 'Sauvegarde en cours...' : 'Enregistrer mon score'}
+            </button>
           </div>
         </div>
       )}
