@@ -128,6 +128,10 @@ export default function Snake() {
   useEffect(() => {
     const handleKey = (e) => {
       if (gameOver) return;
+      // Empêcher le scroll de la page avec les flèches directionnelles
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+        e.preventDefault();
+      }
       if (e.key === 'ArrowUp') handleDirectionChange({ x: 0, y: -1 });
       if (e.key === 'ArrowDown') handleDirectionChange({ x: 0, y: 1 });
       if (e.key === 'ArrowLeft') handleDirectionChange({ x: -1, y: 0 });
@@ -136,6 +140,36 @@ export default function Snake() {
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
   }, [dir, gameOver]);
+
+  // Désactiver le scroll sur desktop uniquement
+  useEffect(() => {
+    const isDesktop = window.innerWidth >= 768; // md breakpoint de Tailwind
+    
+    if (isDesktop) {
+      // Désactiver le scroll sur desktop
+      const preventDefault = (e) => e.preventDefault();
+      
+      // Empêcher le scroll avec la molette, les flèches, espace, etc.
+      window.addEventListener('wheel', preventDefault, { passive: false });
+      window.addEventListener('touchmove', preventDefault, { passive: false });
+      window.addEventListener('keydown', (e) => {
+        // Empêcher les touches de scroll (espace, page up/down, home, end)
+        if (['Space', 'PageUp', 'PageDown', 'Home', 'End'].includes(e.code)) {
+          e.preventDefault();
+        }
+      });
+      
+      // Empêcher le scroll via CSS
+      document.body.style.overflow = 'hidden';
+      
+      return () => {
+        // Restaurer le scroll au démontage
+        window.removeEventListener('wheel', preventDefault);
+        window.removeEventListener('touchmove', preventDefault);
+        document.body.style.overflow = 'auto';
+      };
+    }
+  }, []);
 
   // Confetti animation
   useEffect(() => {

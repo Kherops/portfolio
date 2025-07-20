@@ -1,8 +1,8 @@
 import { createClient } from '@supabase/supabase-js'
 
-// Configuration Supabase - Remplacez YOUR_SUPABASE_ANON_KEY par votre vraie clé anon
-const supabaseUrl = 'https://jjeledjaypzkapoucmdl.supabase.co'
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpqZWxlZGpheXB6a2Fwb3VjbWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMwMDcyNTgsImV4cCI6MjA2ODU4MzI1OH0.2Na_JZnRjwmJ3Xh3oKD_1FS4XKtcEHp0rB7r_5xOKeo'
+// Configuration Supabase - Utilisation des variables d'environnement pour la sécurité
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://jjeledjaypzkapoucmdl.supabase.co'
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || ''
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
