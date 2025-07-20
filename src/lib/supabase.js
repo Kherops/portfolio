@@ -1,8 +1,16 @@
 import { createClient } from '@supabase/supabase-js'
 
-// Configuration Supabase - Utilisation des variables d'environnement pour la sécurité
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://jjeledjaypzkapoucmdl.supabase.co'
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || ''
+// Configuration Supabase - Variables d'environnement
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+
+// Validation de la configuration
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.warn('⚠️ Variables Supabase manquantes:', {
+    url: !!supabaseUrl,
+    key: !!supabaseAnonKey
+  });
+}
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 

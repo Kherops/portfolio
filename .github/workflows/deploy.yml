@@ -34,7 +34,10 @@ jobs:
         env:
           VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
-        run: npm run build
+        run: |
+          echo "Building with Supabase URL: $VITE_SUPABASE_URL"
+          echo "Supabase key present: $([ -n "$VITE_SUPABASE_ANON_KEY" ] && echo 'YES' || echo 'NO')"
+          npm run build
         
       - name: Setup Pages
         uses: actions/configure-pages@v4
