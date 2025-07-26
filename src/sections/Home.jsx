@@ -74,7 +74,7 @@ export default function Home() {
             3ᵉ, 4ᵉ et 5ᵉ année Epitech 
             <br /> Pré-MSc Pro Epitech - Rentrée Septembre 2025 – Nice
           </p>
-          <a href="/portfolio/cv.pdf" target="_blank" rel="noopener noreferrer" className="inline-block px-8 py-4 text-xl bg-neonViolet rounded-2xl text-white font-bold shadow-neonViolet hover:bg-neonPink transition animate-fade-in">Voir mon CV</a>
+          <a href="/portfolio/public/CV_LOUIS_PROTON.pdf" target="_blank" rel="noopener noreferrer" className="inline-block px-8 py-4 text-xl bg-neonViolet rounded-2xl text-white font-bold shadow-neonViolet hover:bg-neonPink transition animate-fade-in">Voir mon CV</a>
         </div>
       </div>
     </section>
